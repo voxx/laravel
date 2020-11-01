@@ -4,13 +4,18 @@ php:
   - 7.3
   - 7.4
 
-os: linux
+services:
+  - mysql
 
 before_script:
-  - composer install
   - cp .env.example .env
+  - mysql -u root -e 'create database laravel-default;'
+  - composer self-update
+  - composer install --dev --prefer-source --no-interaction
   - php artisan key:generate
-  - php artisan jwt:secret
-
-script:
-  - vendor/bin/phpunit
+  - php artisan migrate:install --env=testing --no-interaction
+  - composer dump-autoload
+  - sudo chgrp -R www-data storage bootstrap/cache
+  - sudo chmod -R ug+rwx storage bootstrap/cache
+  - php artisan migrate
+  - php artisan db:seed
